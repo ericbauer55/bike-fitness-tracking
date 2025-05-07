@@ -5,9 +5,11 @@ with open('app/README.md', 'r') as f:
 
 # Ref: https://setuptools.pypa.io/en/latest/references/keywords.html
 
+# Ref: https://www.youtube.com/watch?v=5KEObONUkik&t=366s 
+
 setup(
     name="ride_extractor",
-    version="0.0.1",
+    version="0.0.2",
     description="This package helps extract bike ride data from Strava-rendered GPX files",
     long_description=long_description,
     long_description_content_type="text/markdown",

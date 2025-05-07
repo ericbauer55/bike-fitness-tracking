@@ -1,4 +1,5 @@
 from ride_extractor.ride_extractor.src.extract import GpxExtractor
+from ride_extractor.ride_extractor.src.utils import verify_schema
 import yaml
 import os
 from pathlib import Path
@@ -25,24 +26,31 @@ if __name__ == '__main__':
     
     # Load the files
     with open(config_path, 'r') as f:
-        config = yaml.safe_load(f)
+        config_yaml = yaml.safe_load(f)
+        verify_schema('config', config_yaml)
     with open(secrets_path, 'r') as f:
-        secrets = yaml.safe_load(f)
+        secrets_yaml = yaml.safe_load(f)
+        verify_schema('secrets', secrets_yaml)
 
     #####################################################################################################
     # 1. Run the Extraction
     #####################################################################################################
-    if extract_enable:=config.get('extraction',dict()).get('enable',None) == True:
-        pass
-    elif extract_enable is None:
-        raise KeyError('Extraction config lacking proper schema.')
+    config_extract = config_yaml['extraction']
+    if config_extract['enable'] == True:
+        if config_extract['clear_outputs']:
+            output_dir = Path(config_extract['output_directory'])
+            subprocess.run(f'', shell=True) # TODO: finish this directory removal
+
+        extractor = GpxExtractor(config=config_extract)
+        extractor.run()
     
 
     #####################################################################################################
     # 2. Run the Transformation
     #####################################################################################################
-    if transform_enable:=config.get('transformation',dict()).get('enable',None) == True:
-        pass
-    elif transform_enable is None:
-        raise KeyError('Transformation config lacking proper schema.')
+    config_transform = config_yaml['transformation']
+    if config_transform['enable'] == True:
+        if config_extract['clear_outputs']:
+            output_dir = Path(config_extract['output_directory'])
+            subprocess.run(f'', shell=True) # TODO: finish this directory removal
 

@@ -53,7 +53,7 @@ def read_ride_csv(file_path:str, time_columns=['time'])->pd.DataFrame:
     as there is a 'time' column for the timestamp
     """
     if not Path(file_path).exists(): raise FileNotFoundError(f'The file "{file_path}" does not exist.')
-    
+
     # Read in the CSV file for the Ride
     df = pd.read_csv(file_path)
     
@@ -62,3 +62,6 @@ def read_ride_csv(file_path:str, time_columns=['time'])->pd.DataFrame:
         df[time_col] = pd.to_datetime(df[time_col])
 
     return df
+
+def verify_schema(config_type:str, data:dict) -> bool:
+    pass

@@ -5,7 +5,7 @@ extraction:
   output_directory: '../data/0_extracted/processed' # Output .csv files live here
 
 transformation:
-  enable: True                                      # Should this part of the pipeline run?
+  enable: false                                      # Should this part of the pipeline run?
   clear_outputs: False                              # Should the @output_directory be cleared to start a fresh run?
   input_directory: '../data/0_extracted/processed'  # Input .csv files live here
   output_directory: '../data/1_transformed'         # Output .csv files live here

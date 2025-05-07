@@ -6,6 +6,12 @@ __pycache__/
 # C extensions
 *.so
 
+# Ignore the raw data folder to preserve privacy
+data/0_extracted/*
+
+# Also ignore sensitive config information
+sensitive_config/*
+
 # Distribution / packaging
 .Python
 build/

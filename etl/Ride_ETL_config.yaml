@@ -1,0 +1,8 @@
+extraction:
+  input_directory: '../data/0_extracted/raw'
+  output_directory: '../data/0_extracted/processed'
+
+transformation:
+  input_directory: '../data/0_extracted/processed'
+  output_directory: '../data/1_transformed'
+  scrub_private_coordinates: true

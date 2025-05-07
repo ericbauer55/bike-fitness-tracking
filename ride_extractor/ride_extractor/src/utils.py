@@ -1,5 +1,6 @@
 import pandas as pd
 import gpxpy as gx
+from pathlib import Path
 
 def read_gpx_to_dataframe(file_path:str, ride_id:str)->pd.DataFrame:
     """
@@ -12,6 +13,8 @@ def read_gpx_to_dataframe(file_path:str, ride_id:str)->pd.DataFrame:
 
     Note that due to the way Strava captures activities, track_id and segment_id columns will just be id=0 for all rows
     """
+    if not Path(file_path).exists(): raise FileNotFoundError(f'The file "{file_path}" does not exist.')
+
     # Setup data capture as lists initially
     data = []
 
@@ -41,15 +44,6 @@ def read_gpx_to_dataframe(file_path:str, ride_id:str)->pd.DataFrame:
 
     return df
 
-def get_ride_id(file_path:str)->str:
-    """
-    This function extracts the ride ID from a file name and returns it as a string
-    """
-    # Extract the ride ID from the file_path
-    ride_id = file_path.split('/')[-1] # grab the file name from the path
-    ride_id = ride_id.split('.')[0] # grab the ride ID from file name
-
-    return ride_id
 
 def read_ride_csv(file_path:str, time_columns=['time'])->pd.DataFrame:
     """
@@ -58,6 +52,8 @@ def read_ride_csv(file_path:str, time_columns=['time'])->pd.DataFrame:
     The state of the data (processed vs. enriched) doesn't matter as long
     as there is a 'time' column for the timestamp
     """
+    if not Path(file_path).exists(): raise FileNotFoundError(f'The file "{file_path}" does not exist.')
+    
     # Read in the CSV file for the Ride
     df = pd.read_csv(file_path)
     

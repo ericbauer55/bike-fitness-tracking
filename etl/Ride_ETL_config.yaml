@@ -1,8 +1,12 @@
 extraction:
-  input_directory: '../data/0_extracted/raw'
-  output_directory: '../data/0_extracted/processed'
+  enable: True                                      # Should this part of the pipeline run?
+  clear_outputs: False                              # Should the @output_directory be cleared to start a fresh run?
+  input_directory: '../data/0_extracted/raw'        # Input .gpx files live here
+  output_directory: '../data/0_extracted/processed' # Output .csv files live here
 
 transformation:
-  input_directory: '../data/0_extracted/processed'
-  output_directory: '../data/1_transformed'
-  scrub_private_coordinates: true
+  enable: True                                      # Should this part of the pipeline run?
+  clear_outputs: False                              # Should the @output_directory be cleared to start a fresh run?
+  input_directory: '../data/0_extracted/processed'  # Input .csv files live here
+  output_directory: '../data/1_transformed'         # Output .csv files live here
+  scrub_private_coordinates: True                   # When running the cleaning steps, should GPS coordinates near sensitive points be deleted?

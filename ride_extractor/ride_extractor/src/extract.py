@@ -7,7 +7,7 @@ class GpxExtractor:
         self.config = config
         self.config['processed_path'] = Path(self.config['processed_path'])
 
-    def run_extraction(self, file_list: list[str]) -> None:
+    def run(self, file_list: list[str]) -> None:
         file_list = list(map(Path, file_list))
         # Verify that all files exist
         f_exists = [file.exists() for file in file_list]

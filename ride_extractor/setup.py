@@ -1,11 +1,14 @@
 from setuptools import setup, find_packages
 
-with open('app/README.md', 'r') as f:
+with open('README.md', 'r') as f:
     long_description = f.read()
 
 # Ref: https://setuptools.pypa.io/en/latest/references/keywords.html
 
 # Ref: https://www.youtube.com/watch?v=5KEObONUkik&t=366s 
+# pip install wheel
+# cd into top of package
+# running package setup via "python3 setup.py bdist_wheel sdist"
 
 setup(
     name="ride_extractor",
@@ -13,8 +16,8 @@ setup(
     description="This package helps extract bike ride data from Strava-rendered GPX files",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    package_dir={"":"app"}, 
-    packages=find_packages(where="app"),
+    package_dir={"":"ride_extractor"}, 
+    packages=find_packages(where="ride_extractor"),
     author="Eric Bauer",
     author_email="eric.bauer55@gmail.com",
     license="MIT",

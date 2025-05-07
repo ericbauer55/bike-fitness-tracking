@@ -1,16 +1,17 @@
 import pandas as pd
 import gpxpy as gx
 
-def read_gpx_to_dataframe(file_path:str)->pd.DataFrame:
+def read_gpx_to_dataframe(file_path:str, ride_id:str)->pd.DataFrame:
     """
     Given a fully qualified @file_path, this function utilizes the gpxpy
     package to parse the Track Point data from the XML structure.
 
-    This returns a Pandas dataframe of the GPX file
-    """
-    # Extract the ride ID from the file_path
-    ride_id = get_ride_id(file_path=file_path)
+    This returns a Pandas dataframe of the GPX file. If any sensor values are present,
+    it will read those in as new columns from the extensions columns.
+    As such, the base schema = ['ride_id', 'track_id', 'segment_id', 'time', 'elevation', 'latitude', 'longitude']
 
+    Note that due to the way Strava captures activities, track_id and segment_id columns will just be id=0 for all rows
+    """
     # Setup data capture as lists initially
     data = []
 
@@ -24,8 +25,15 @@ def read_gpx_to_dataframe(file_path:str)->pd.DataFrame:
             for j, segment in enumerate(track.segments):
                 for point in segment.points:
                     # create the row of data & append to data
-                    row = {'ride_id':ride_id, 'segment_id':-1, 'time':point.time, 
+                    row = {'ride_id':ride_id, 'track_id':i,'segment_id':j, 'time':point.time, 
                         'elevation':point.elevation, 'latitude':point.latitude, 'longitude':point.longitude}
+                    # determine the data available in sensor extension tags (if any)
+                    row_extension = dict()
+                    for element in point.extensions[0]:
+                        tag = element.tag.split('}')[-1] # remove the {schema_prefix_url} that prepends the extension name
+                        row_extension[tag] = element.text
+                    
+                    row |= row_extension
                     data.append(row)
     
     # Capture the data structure as a Pandas Dataframe

@@ -4,14 +4,11 @@ from pathlib import Path
 
 class GpxExtractor:
     def __init__(self, config:dict):
-        self.config = config
-        self.config['input_directory'] = Path(self.config['input_directory'])
-        self.config['output_directory'] = Path(self.config['output_directory'])
-        
+        self.config = config        
 
     def run(self, file_list: Optional[list[str]]=None) -> None:
         if file_list is None:
-            self.config['output_directory']
+            file_list = list(self.config['input_directory'].iterdir())
         else:
             file_list = list(map(Path, file_list))
             # Verify that all files exist

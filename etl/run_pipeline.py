@@ -29,19 +29,19 @@ if __name__ == '__main__':
         config_yaml = verify_schema('config', config_yaml)
     with open(secrets_path, 'r') as f:
         secrets_yaml = yaml.safe_load(f)
-        config_yaml = verify_schema('secrets', secrets_yaml)
+        secrets_yaml = verify_schema('secrets', secrets_yaml)
 
-    # #####################################################################################################
-    # # 1. Run the Extraction
-    # #####################################################################################################
-    # config_extract = config_yaml['extraction']
-    # if config_extract['enable'] == True:
-    #     if config_extract['clear_outputs']:
-    #         output_dir = Path(config_extract['output_directory'])
-    #         subprocess.run(f'rm -rf {output_dir}/*', shell=True)
+    #####################################################################################################
+    # 1. Run the Extraction
+    #####################################################################################################
+    config_extract = config_yaml['extraction']
+    if config_extract['enable'] == True:
+        if config_extract['clear_outputs']:
+            output_dir = Path(config_extract['output_directory'])
+            subprocess.run(f'rm -rf {output_dir}/*', shell=True)
 
-    #     extractor = GpxExtractor(config=config_extract)
-    #     extractor.run()
+        extractor = GpxExtractor(config=config_extract)
+        extractor.run()
     
 
     # #####################################################################################################

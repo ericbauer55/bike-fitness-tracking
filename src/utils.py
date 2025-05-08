@@ -32,12 +32,13 @@ def read_gpx_to_dataframe(file_path:str, ride_id:str)->pd.DataFrame:
                     row = {'ride_id':ride_id, 'track_id':i,'segment_id':j, 'time':point.time, 
                         'elevation':point.elevation, 'latitude':point.latitude, 'longitude':point.longitude}
                     # determine the data available in sensor extension tags (if any)
-                    row_extension = dict()
-                    for element in point.extensions[0]:
-                        tag = element.tag.split('}')[-1] # remove the {schema_prefix_url} that prepends the extension name
-                        row_extension[tag] = element.text
-                    
-                    row |= row_extension
+                    if len(point.extensions)>0:
+                        row_extension = dict()
+                        for element in point.extensions[0]:
+                            tag = element.tag.split('}')[-1] # remove the {schema_prefix_url} that prepends the extension name
+                            row_extension[tag] = element.text
+                        
+                        row |= row_extension
                     data.append(row)
     
     # Capture the data structure as a Pandas Dataframe
@@ -68,12 +69,12 @@ def verify_schema(config_type:str, data:dict) -> bool:
     if config_type=='config':
         schema_dict = {And('extraction'):{'enable': And(bool),
                                     'clear_outputs': And(bool),
-                                    'input_directory': And(str, Use(Path)),
-                                    'output_directory': And(str, Use(Path))},
+                                    'input_directory': And(str, Use(lambda x:Path(x).resolve())),
+                                    'output_directory': And(str, Use(lambda x:Path(x).resolve()))},
                         And('transformation'):{'enable': And(bool),
                                         'clear_outputs': And(bool),
-                                        'input_directory': And(str, Use(Path)),
-                                        'output_directory': And(str, Use(Path)),
+                                        'input_directory': And(str, Use(lambda x:Path(x).resolve())),
+                                        'output_directory': And(str, Use(lambda x:Path(x).resolve())),
                                         'scrub_private_coordinates': And(bool)}
                         }
 

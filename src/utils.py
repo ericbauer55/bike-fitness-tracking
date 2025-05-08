@@ -1,6 +1,7 @@
 import pandas as pd
 import gpxpy as gx
 from pathlib import Path
+from schema import Schema, And, Or, Use
 
 def read_gpx_to_dataframe(file_path:str, ride_id:str)->pd.DataFrame:
     """
@@ -31,12 +32,13 @@ def read_gpx_to_dataframe(file_path:str, ride_id:str)->pd.DataFrame:
                     row = {'ride_id':ride_id, 'track_id':i,'segment_id':j, 'time':point.time, 
                         'elevation':point.elevation, 'latitude':point.latitude, 'longitude':point.longitude}
                     # determine the data available in sensor extension tags (if any)
-                    row_extension = dict()
-                    for element in point.extensions[0]:
-                        tag = element.tag.split('}')[-1] # remove the {schema_prefix_url} that prepends the extension name
-                        row_extension[tag] = element.text
-                    
-                    row |= row_extension
+                    if len(point.extensions)>0:
+                        row_extension = dict()
+                        for element in point.extensions[0]:
+                            tag = element.tag.split('}')[-1] # remove the {schema_prefix_url} that prepends the extension name
+                            row_extension[tag] = element.text
+                        
+                        row |= row_extension
                     data.append(row)
     
     # Capture the data structure as a Pandas Dataframe
@@ -64,4 +66,24 @@ def read_ride_csv(file_path:str, time_columns=['time'])->pd.DataFrame:
     return df
 
 def verify_schema(config_type:str, data:dict) -> bool:
-    pass
+    if config_type=='config':
+        schema_dict = {And('extraction'):{'enable': And(bool),
+                                    'clear_outputs': And(bool),
+                                    'input_directory': And(str, Use(lambda x:Path(x).resolve())),
+                                    'output_directory': And(str, Use(lambda x:Path(x).resolve()))},
+                        And('transformation'):{'enable': And(bool),
+                                        'clear_outputs': And(bool),
+                                        'input_directory': And(str, Use(lambda x:Path(x).resolve())),
+                                        'output_directory': And(str, Use(lambda x:Path(x).resolve())),
+                                        'scrub_private_coordinates': And(bool)}
+                        }
+
+    elif config_type=='secrets':
+        schema_dict = {'home_location':{'lat':And(float, lambda x: -90 <= x <= 90),
+                                        'long':And(float, lambda x: -180 <= x <= 180),
+                                        'scrub_radius':And(Or(float,int), lambda x:x>0)}}
+    else:
+        raise ValueError(f'Only types ["config","secrets"] are allowed. Type "{config_type}" is invalid.')
+
+    schema = Schema(schema_dict)
+    return schema.validate(data)

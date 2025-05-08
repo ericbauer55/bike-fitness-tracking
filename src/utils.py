@@ -29,7 +29,7 @@ def read_gpx_to_dataframe(file_path:str, ride_id:str)->pd.DataFrame:
             for j, segment in enumerate(track.segments):
                 for point in segment.points:
                     # create the row of data & append to data
-                    row = {'ride_id':ride_id, 'track_id':i,'segment_id':j, 'time':point.time, 
+                    row = {'ride_id':ride_id, 'track_id':i,'segment_id':-1, 'time':point.time, 
                         'elevation':point.elevation, 'latitude':point.latitude, 'longitude':point.longitude}
                     # determine the data available in sensor extension tags (if any)
                     if len(point.extensions)>0:

@@ -1,6 +1,7 @@
 import pandas as pd
 import gpxpy as gx
 from pathlib import Path
+from schema import Schema, And, Use
 
 def read_gpx_to_dataframe(file_path:str, ride_id:str)->pd.DataFrame:
     """
@@ -64,4 +65,4 @@ def read_ride_csv(file_path:str, time_columns=['time'])->pd.DataFrame:
     return df
 
 def verify_schema(config_type:str, data:dict) -> bool:
-    pass
+    return data

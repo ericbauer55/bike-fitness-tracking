@@ -3,7 +3,7 @@ from pathlib import Path
 SRC = Path(__file__).parent.parent / "src"
 print(SRC)
 sys.path.append(SRC.as_posix())
-from src.utils import verify_schema
+from ..src.utils import verify_schema
 
 # from ride_extractor.ride_extractor.src.extract import GpxExtractor
 # from ride_extractor.ride_extractor.src.utils import verify_schema

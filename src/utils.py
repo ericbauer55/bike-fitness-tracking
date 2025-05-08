@@ -1,7 +1,7 @@
 import pandas as pd
 import gpxpy as gx
 from pathlib import Path
-from schema import Schema, And, Use
+from schema import Schema, And, Or, Use
 
 def read_gpx_to_dataframe(file_path:str, ride_id:str)->pd.DataFrame:
     """
@@ -65,4 +65,24 @@ def read_ride_csv(file_path:str, time_columns=['time'])->pd.DataFrame:
     return df
 
 def verify_schema(config_type:str, data:dict) -> bool:
-    return data
+    if config_type=='config':
+        schema_dict = {And('extraction'):{'enable': And(bool),
+                                    'clear_outputs': And(bool),
+                                    'input_directory': And(str, Use(Path)),
+                                    'output_directory': And(str, Use(Path))},
+                        And('transformation'):{'enable': And(bool),
+                                        'clear_outputs': And(bool),
+                                        'input_directory': And(str, Use(Path)),
+                                        'output_directory': And(str, Use(Path)),
+                                        'scrub_private_coordinates': And(bool)}
+                        }
+
+    elif config_type=='secrets':
+        schema_dict = {'home_location':{'lat':And(float, lambda x: -90 <= x <= 90),
+                                        'long':And(float, lambda x: -180 <= x <= 180),
+                                        'scrub_radius':And(Or(float,int), lambda x:x>0)}}
+    else:
+        raise ValueError(f'Only types ["config","secrets"] are allowed. Type "{config_type}" is invalid.')
+
+    schema = Schema(schema_dict)
+    return schema.validate(data)

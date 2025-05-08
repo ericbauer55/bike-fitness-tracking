@@ -21,7 +21,7 @@ class GpxExtractor:
         for file in file_list:
             ride_id = file.stem # 'path/to/my/ride_001.gpx --> has stem=='ride_001'
             df_ride = read_gpx_to_dataframe(file, ride_id)
-            df_ride.to_csv(self.config['output_directory'] / f'{ride_id}.csv')
+            df_ride.to_csv(self.config['output_directory'] / f'{ride_id}.csv', index=False)
 
     #######################################################################################
     # Helper Methods

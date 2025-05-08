@@ -87,6 +87,3 @@ def verify_schema(config_type:str, data:dict) -> bool:
 
     schema = Schema(schema_dict)
     return schema.validate(data)
-
-
-PandasWindow

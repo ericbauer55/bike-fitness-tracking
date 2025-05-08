@@ -10,3 +10,6 @@ transformation:
   input_directory: '../data/0_extracted/processed'  # Input .csv files live here
   output_directory: '../data/1_transformed'         # Output .csv files live here
   scrub_private_coordinates: True                   # When running the cleaning steps, should GPS coordinates near sensitive points be deleted?
+
+
+          

@@ -1,6 +1,7 @@
 from .utils import read_gpx_to_dataframe
 from typing import Optional, Any
 from pathlib import Path
+import pandas as pd
 
 class GpxExtractor:
     def __init__(self, config:dict):
@@ -19,10 +20,14 @@ class GpxExtractor:
 
         # For each file, run the extraction process
         for file in file_list:
-            ride_id = file.stem # 'path/to/my/ride_001.gpx --> has stem=='ride_001'
+            ride_id = 'temporary'
             df_ride = read_gpx_to_dataframe(file, ride_id)
+            ride_id = self._get_ride_id(df_ride.loc[0,'time'])
+            df_ride['ride_id'] = ride_id
             df_ride.to_csv(self.config['output_directory'] / f'{ride_id}.csv', index=False)
 
     #######################################################################################
     # Helper Methods
     #######################################################################################
+    def _get_ride_id(start_time:pd.Timestamp) -> str:
+        return str(hex(hash(start_time.timestamp())))

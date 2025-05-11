@@ -70,12 +70,23 @@ def verify_schema(config_type:str, data:dict) -> bool:
         schema_dict = {And('extraction'):{'enable': And(bool),
                                     'clear_outputs': And(bool),
                                     'input_directory': And(str, Use(lambda x:Path(x).resolve())),
-                                    'output_directory': And(str, Use(lambda x:Path(x).resolve()))},
+                                    'output_directory': And(str, Use(lambda x:Path(x).resolve())),
+                                    'summary_output_directory': And(str, Use(lambda x:Path(x).resolve()))
+                                    },
                         And('transformation'):{'enable': And(bool),
                                         'clear_outputs': And(bool),
                                         'input_directory': And(str, Use(lambda x:Path(x).resolve())),
                                         'output_directory': And(str, Use(lambda x:Path(x).resolve())),
-                                        'scrub_private_coordinates': And(bool)}
+                                        'summary_output_directory': And(str, Use(lambda x:Path(x).resolve())),
+                                        'scrub_private_coordinates': And(bool),
+                                        And('power_params'):{'area': And(float, Use(float), lambda x: x>0),
+                                                             'mu_rr': And(float, Use(float), lambda x: x>0 and x<0.5),  
+                                                             'c_drag': And(float, Use(float), lambda x: x>0), 
+                                                             'rho_air': And(float, Use(float), lambda x: x>0),   
+                                                             'eta_dt': And(float, Use(float), lambda x: x>0 and x<1.0),  
+                                                             'gravity': And(float, Use(float), lambda x: x in [9.8, 32.15224]) # m/s^2, ft/s^2
+                                                            }
+                                        }
                         }
 
     elif config_type=='secrets':

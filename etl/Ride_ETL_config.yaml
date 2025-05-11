@@ -13,11 +13,11 @@ transformation:
   summary_output_directory: '../data/1_transformed/summary' # Output summary .csv file lives here
   scrub_private_coordinates: True                         # When running the cleaning steps, should GPS coordinates near sensitive points be deleted?
   power_params:
-    area: 0.4635862, # m^2, estimated from front photo/thresholding
-    mu_rr: 0.005, # coefficient of rolling friction
-    c_drag: 0.95, # coefficient of drag
-    rho_air: 1.2, # kg/m^3 air density
-    eta_dt: 0.96, # efficiency of drive train
+    area: 0.4635862 # m^2, estimated from front photo/thresholding
+    mu_rr: 0.005 # coefficient of rolling friction
+    c_drag: 0.95 # coefficient of drag
+    rho_air: 1.2 # kg/m^3 air density
+    eta_dt: 0.96 # efficiency of drive train
     gravity: 9.8 # m/s^2
 
 

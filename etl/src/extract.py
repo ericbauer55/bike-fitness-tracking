@@ -31,7 +31,7 @@ class GpxExtractor:
             # Record a brief summary of each ride to start. It will be enhanced later
             df_ride['time'] = pd.to_datetime(df_ride['time'])
             summary_datum = {'ride_id':ride_id, 'start_date':df_ride.loc[0,'time'].date(), 
-                             'start_time':df_ride.loc[0,'time'].time(), 'end_time':df_ride.loc[-1,'time'].time(),
+                             'start_time':df_ride.loc[0,'time'].time(), 'end_time':df_ride.loc[df_ride.shape[0]-1,'time'].time(),
                              'biker_weight_lbs':220, 'bike_weight':25, 'bag_weight':5}
             summary_data.append(summary_datum)
         df_summary = pd.DataFrame(summary_data).sort_values(by=['start_date','start_time'])
@@ -40,5 +40,6 @@ class GpxExtractor:
     #######################################################################################
     # Helper Methods
     #######################################################################################
+    @staticmethod
     def _get_ride_id(start_time:pd.Timestamp) -> str:
         return str(hex(hash(start_time.timestamp())))

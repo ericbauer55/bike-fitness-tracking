@@ -5,15 +5,16 @@ from haversine import haversine
 from typing import Optional
 from pathlib import Path
 from .utils import read_ride_csv
-from .clean import PrivacyZoner
+from .clean import PrivacyZoner, NoiseFilter
 
 class GpxTransformer:
     def __init__(self, config:dict, privacy_config:dict):
         self.config = config   
         self.privacy_config = privacy_config
-        self.df_summary = None
+        self.df_summary = pd.read_csv(config['summary_input_directory'])
         self.Timer: TimeUpsampler = None
         self.Enricher: BasicEnricher = None
+        self.NoiseFilter: NoiseFilter = None
         self.PowerEstimator: PowerEstimator = None
         self.PrivacyScrubber: PrivacyZoner = None
         self.transformers: dict = self._initialize_transformers()
@@ -36,12 +37,15 @@ class GpxTransformer:
             ride_id = file.stem # 'path/to/my/ride_001.csv --> has stem=='ride_001'
             df_ride = self._read_ride_csv(file)
             
-            #df_ride = read_gpx_to_dataframe(file, ride_id)
-            #df_ride.to_csv(self.config['output_directory'] / f'{ride_id}.csv', index=False)
+            # Transform each Ride File
+            df_ride = self._process_transforms(df_ride, ride_id)
 
             # After all of the transformations, summarize the ride
-            ride_summary_datum = self._get_ride_summary(df_ride)
+            ride_summary_datum = self._get_ride_summary(df_ride, ride_id)
             summary_data.append(ride_summary_datum)
+        
+        df_summary_new = pd.DataFrame(summary_data)
+        self._save_new_ride_summary(df_summary_new)
 
     #######################################################################################
     # Helper Methods
@@ -49,9 +53,20 @@ class GpxTransformer:
     def _initialize_transformers(self) -> dict:
         self.Timer = TimeUpsampler()
         self.Enricher = BasicEnricher()
-        self.PowerEstimator = PowerEstimator(self.config['power_params']) # TODO: make mass a separate calculation added at process time
+        self.NoiseFilter = NoiseFilter()
+        self.PowerEstimator = PowerEstimator(self.config['power_params'])
         self.PrivacyScrubber = PrivacyZoner(self.privacy_config)
 
+    def _process_transforms(self, df:pd.DataFrame, ride_id:str) -> pd.DataFrame:
+        df = self.Timer.process(df, time_gap_threshold=self.config['time_gap_threshold'], upsample=True)
+        df = self.Enricher.process(df)
+        columns_to_filter = ['ambient_temp_C','heart_rate_bpm','cadence_rpm','speed', 'grade', 'grade_saturated']
+        df = self.NoiseFilter.filter_columns(df, columns_to_filter)
+        # Get the total weight for this ride
+        total_weight = self.df_summary.loc[self.df_summary['ride_id']==ride_id, [col for col in self.df_summary.columns if 'weight' in col]].values.sum()
+        df = self.PowerEstimator.estimate_power(df, total_weight)
+        df = self.PrivacyScrubber.process(df)
+        return df
 
     def _read_ride_csv(file_path:str, time_columns:list[str]=None) -> pd.DataFrame:
         if time_columns is None: time_columns=['time']
@@ -79,10 +94,28 @@ class GpxTransformer:
         return df
     
     
-    def _get_ride_summary(df:pd.DataFrame) -> dict:
+    def _get_ride_summary(df:pd.DataFrame, ride_id:str) -> dict:
         # TODO: get the average speed, average cruising speed, total time vs moving time, total distance
-        #               start time, end time, start date, heart rate zones, power zones
-        pass
+        #               heart rate zones, power zones, avg cadence, cadence_duty_cycle
+        summary = {'ride_id':ride_id,
+                   'avg_speed':df['filt_speed'].mean(),
+                   'avg_cruising_speed':df.loc[df['is_cruising']==True, 'filt_speed'].mean(),
+                   'total_ride_time_sec':df.loc['elapsed_time'].max(),
+                   'total_moving_time_sec':df.loc[df['is_cruising']==True,'delta_time'].sum(),
+                   'total_distance_mi':-1, # TODO: confirm if delta_dist exists,
+                   'total_ascent_ft':df.loc['elapsed_ascent'].max(),
+                   'total_descent_ft':df.loc['elapsed_descent'].max(),
+                   'avg_heart_rate':df['heart_rate'].mean(),
+                   'avg_power':df['inst_power'].mean(),
+                   'avg_cadence':df['filt_cadence'].mean(),
+                   'cadence_duty_cycle':sum((df['is_cruising']==True)&(df['filt_cadence']>20)) / sum(df['is_cruising']==True)
+                   }
+        return summary
+
+    def _save_new_ride_summary(self, df_summary_new:pd.DataFrame) -> None
+        # Merge new summary data into old summary data using ride_id as the key
+        df_total_summary = self.df_summary.merge(df_summary_new, how='left',on='ride_id')
+        df_total_summary.to_csv(self.config['summary_output_directory'] / f'ride_summary.csv', index=False)
 
 
 
@@ -316,12 +349,18 @@ class PowerEstimator:
         self.speed_col = speed_col
         self.grade_col = grade_col
 
-    def estimate_power(self, df:pd.DataFrame) -> pd.DataFrame:
+    def estimate_power(self, df:pd.DataFrame, total_weight_lbs:float) -> pd.DataFrame:
+        """
+        @total_weight_lbs should be calculated from the ride summary weight categories (rider, bike, bags, etc)
+        """
+        pounds_to_kilograms = 0.453592
+        total_mass_kg = pounds_to_kilograms * total_weight_lbs
         df = df.copy()
-        return self.get_instantaneous_power(df, self.power_params, self.speed_col, self.grade_col)
+        return self.get_instantaneous_power(df, self.power_params, total_mass_kg, self.speed_col, self.grade_col)
 
     @staticmethod
-    def get_instantaneous_power(df:pd.DataFrame, power_params:dict, speed_column:str='speed', grade_column:str='grade_saturated'):
+    def get_instantaneous_power(df:pd.DataFrame, power_params:dict, total_mass:float,
+                                speed_column:str='speed', grade_column:str='grade_saturated'):
         cols_to_drop_later = ['grade_radians','speed_MpS','F_grav','F_fric','F_drag', 'F_sum', 
                             'total_speed']
         params = power_params
@@ -337,8 +376,6 @@ class PowerEstimator:
         df['total_speed'] = df['speed_MpS']
         
         # Calculate the individual forces
-        pounds_to_kilograms = 0.453592
-        total_mass = pounds_to_kilograms * sum(list(params['weight'].values()))
         df['F_grav'] = total_mass*params['gravity'] * np.sin(df['grade_radians'])
         df['F_fric'] = params['mu_rr']*total_mass*params['gravity'] * np.cos(df['grade_radians'])
         full_coefficient = 0.5 * params['rho_air'] * params['area'] * params['c_drag']

@@ -18,6 +18,11 @@ class NoiseFilter:
     def filter_columns(self, df:pd.DataFrame, columns:list[str]) -> pd.DataFrame:
         df = df.copy()
         for col in columns:
+            # ensure that the entire column isn't null
+            if all(df[col].isna()):
+                df['filt_'+col] = np.nan
+                continue # skip applying a filter
+            
             df = self.apply_filter(df, col, self.fir_filter)
         return df 
 

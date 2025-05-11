@@ -5,11 +5,13 @@ from haversine import haversine
 from typing import Optional
 from pathlib import Path
 from .utils import read_ride_csv
+from .clean import PrivacyZoner
 
 class GpxTransformer:
     def __init__(self, config:dict):
         self.config = config   
         self.df_summary = None
+        self.transformers: dict = self._initialize_transformers()
 
     def run(self, file_list: Optional[list[str]]=None) -> None:
         if file_list is None:
@@ -34,10 +36,14 @@ class GpxTransformer:
 
             # After all of the transformations, summarize the ride
             ride_summary_datum = self._get_ride_summary(df_ride)
+            summary_data.append(ride_summary_datum)
 
     #######################################################################################
     # Helper Methods
     #######################################################################################
+    def _initialize_transformers(self) -> dict:
+        pass
+
     def _read_ride_csv(file_path:str, time_columns:list[str]=None) -> pd.DataFrame:
         if time_columns is None: time_columns=['time']
         # Read in the CSV file for the Ride
@@ -64,7 +70,10 @@ class GpxTransformer:
         return df
     
     
-
+    def _get_ride_summary(df:pd.DataFrame) -> dict:
+        # TODO: get the average speed, average cruising speed, total time vs moving time, total distance
+        #               start time, end time, start date, heart rate zones, power zones
+        pass
 
 
 

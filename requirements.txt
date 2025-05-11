@@ -8,3 +8,4 @@ scikit-learn==1.6.1
 scipy==1.15.2
 seaborn==0.13.2
 schema==0.7.7
+tqdm==4.67.1

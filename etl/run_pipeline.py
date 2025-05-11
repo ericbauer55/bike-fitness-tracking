@@ -1,5 +1,9 @@
 from src.utils import verify_schema
 from src.extract import GpxExtractor
+from src.transform import GpxTransformer
+import warnings
+warnings.filterwarnings('ignore')
+
 import yaml
 import os
 from pathlib import Path
@@ -34,22 +38,42 @@ if __name__ == '__main__':
     #####################################################################################################
     # 1. Run the Extraction
     #####################################################################################################
+    Msep = '='*90+'\n'
+    msep = '-'*75+'\n'
     config_extract = config_yaml['extraction']
+    print(Msep)
     if config_extract['enable'] == True:
+        print('Extracting Raw GPX Ride Files...')
+        print(msep)
         if config_extract['clear_outputs']:
             output_dir = Path(config_extract['output_directory'])
+            print(f'Clearing "{output_dir}" for a fresh run.')
+            print(msep)
             subprocess.run(f'rm -rf {output_dir}/*', shell=True)
+            subprocess.run(f'mkdir {output_dir}/summary', shell=True)
 
         extractor = GpxExtractor(config=config_extract)
         extractor.run()
+    else:
+        print('Skipping Extraction Step...')
     
 
     # #####################################################################################################
     # # 2. Run the Transformation
     # #####################################################################################################
-    # config_transform = config_yaml['transformation']
-    # if config_transform['enable'] == True:
-    #     if config_extract['clear_outputs']:
-    #         output_dir = Path(config_extract['output_directory'])
-    #         subprocess.run(f'rm -rf {output_dir}/*', shell=True)
+    config_transform = config_yaml['transformation']
+    print(Msep)
+    if config_transform['enable'] == True:
+        print('Transforming CSV Ride Files...')
+        print(msep)
+        if config_extract['clear_outputs']:
+            output_dir = Path(config_extract['output_directory'])
+            print(f'Clearing "{output_dir}" for a fresh run.')
+            print(msep)
+            subprocess.run(f'rm -rf {output_dir}/*', shell=True)
+
+        transfomer = GpxTransformer(config=config_transform, privacy_config=secrets_yaml)
+        transfomer.run()
+    else:
+        print('Skipping Transformation Step...')
 

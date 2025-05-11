@@ -1,15 +1,27 @@
 extraction:
-  enable: True                                      # Should this part of the pipeline run?
-  clear_outputs: False                              # Should the @output_directory be cleared to start a fresh run?
-  input_directory: '../data/0_extracted/raw'        # Input .gpx files live here
-  output_directory: '../data/0_extracted/processed' # Output .csv files live here
+  enable: False                                            # Should this part of the pipeline run?
+  clear_outputs: False                                    # Should the @output_directory be cleared to start a fresh run?
+  input_directory: '../data/0_extracted/raw'              # Input .gpx files live here
+  output_directory: '../data/0_extracted/processed'       # Output .csv files live here
+  summary_output_directory: '../data/0_extracted/summary' # Output summary .csv file lives here
 
 transformation:
-  enable: false                                      # Should this part of the pipeline run?
-  clear_outputs: False                              # Should the @output_directory be cleared to start a fresh run?
-  input_directory: '../data/0_extracted/processed'  # Input .csv files live here
-  output_directory: '../data/1_transformed'         # Output .csv files live here
-  scrub_private_coordinates: True                   # When running the cleaning steps, should GPS coordinates near sensitive points be deleted?
+  enable: True                                           # Should this part of the pipeline run?
+  clear_outputs: True                                    # Should the @output_directory be cleared to start a fresh run?
+  input_directory: '../data/0_extracted/processed'        # Input .csv files live here
+  output_directory: '../data/1_transformed'               # Output .csv files live here
+  summary_input_directory: '../data/0_extracted/summary'  # Input summary .csv file lives here (as created by the Exteract flow)
+  summary_output_directory: '../data/1_transformed/summary' # Output summary .csv file lives here
+  ###################################################################################################################################################
+  time_gap_threshold: 15.0                                # Different segment IDs form when successive time rows are different by more than this
+  scrub_private_coordinates: True                         # When running the cleaning steps, should GPS coordinates near sensitive points be deleted?
+  power_params:
+    area: 0.4635862 # m^2, estimated from front photo/thresholding
+    mu_rr: 0.005 # coefficient of rolling friction
+    c_drag: 0.95 # coefficient of drag
+    rho_air: 1.2 # kg/m^3 air density
+    eta_dt: 0.96 # efficiency of drive train
+    gravity: 9.8 # m/s^2
 
 
           

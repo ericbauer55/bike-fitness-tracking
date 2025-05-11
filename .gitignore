@@ -10,7 +10,7 @@ __pycache__/
 data/0_extracted/*
 
 # Also ignore sensitive config information
-sensitive_config/*
+etl/sensitive_config/*
 
 # Distribution / packaging
 .Python

@@ -1,5 +1,6 @@
 from src.utils import verify_schema
 from src.extract import GpxExtractor
+
 import yaml
 import os
 from pathlib import Path

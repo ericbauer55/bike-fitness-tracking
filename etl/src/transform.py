@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from tqdm import tqdm
 from functools import reduce
 from haversine import haversine
 from typing import Optional
@@ -11,7 +12,7 @@ class GpxTransformer:
     def __init__(self, config:dict, privacy_config:dict):
         self.config = config   
         self.privacy_config = privacy_config
-        self.df_summary = pd.read_csv(config['summary_input_directory'])
+        self.df_summary = pd.read_csv(config['summary_input_directory'] / "ride_summary.csv")
         self.Timer: TimeUpsampler = None
         self.Enricher: BasicEnricher = None
         self.NoiseFilter: NoiseFilter = None
@@ -33,12 +34,13 @@ class GpxTransformer:
         summary_data = []
 
         # For each file, run the extraction process
-        for file in file_list:
+        for file in tqdm(file_list):
             ride_id = file.stem # 'path/to/my/ride_001.csv --> has stem=='ride_001'
             df_ride = self._read_ride_csv(file)
             
             # Transform each Ride File
             df_ride = self._process_transforms(df_ride, ride_id)
+            df_ride.to_csv(self.config['output_directory'] / f'{ride_id}.csv', index=False)
 
             # After all of the transformations, summarize the ride
             ride_summary_datum = self._get_ride_summary(df_ride, ride_id)
@@ -68,7 +70,7 @@ class GpxTransformer:
         df = self.PrivacyScrubber.process(df)
         return df
 
-    def _read_ride_csv(file_path:str, time_columns:list[str]=None) -> pd.DataFrame:
+    def _read_ride_csv(self, file_path:str, time_columns:list[str]=None) -> pd.DataFrame:
         if time_columns is None: time_columns=['time']
         # Read in the CSV file for the Ride
         df = pd.read_csv(file_path)
@@ -88,31 +90,39 @@ class GpxTransformer:
             if col not in df.columns:
                 df[col] = np.nan
 
+        # ensure for all numerical columns that their type is truly a float
+        for col in df.columns:
+            if col in ['time','segement_id','ride_id']: continue # skip this
+            df[col] = df[col].astype(float)
+
         # rename columns for easier reading later
         df = df.rename(columns={'atemp':'ambient_temp_C','hr':'heart_rate_bpm', 'cad':'cadence_rpm'})
 
         return df
     
     
-    def _get_ride_summary(df:pd.DataFrame, ride_id:str) -> dict:
+    def _get_ride_summary(self, df:pd.DataFrame, ride_id:str) -> dict:
         # TODO: get the average speed, average cruising speed, total time vs moving time, total distance
         #               heart rate zones, power zones, avg cadence, cadence_duty_cycle
+        feet_to_miles = 1.0 / 5280.0
+        C_to_F = lambda c: (9.0/5.0)*c + 32.0
         summary = {'ride_id':ride_id,
                    'avg_speed':df['filt_speed'].mean(),
                    'avg_cruising_speed':df.loc[df['is_cruising']==True, 'filt_speed'].mean(),
-                   'total_ride_time_sec':df.loc['elapsed_time'].max(),
+                   'total_ride_time_sec':df['elapsed_time'].max(),
                    'total_moving_time_sec':df.loc[df['is_cruising']==True,'delta_time'].sum(),
-                   'total_distance_mi':-1, # TODO: confirm if delta_dist exists,
-                   'total_ascent_ft':df.loc['elapsed_ascent'].max(),
-                   'total_descent_ft':df.loc['elapsed_descent'].max(),
-                   'avg_heart_rate':df['heart_rate'].mean(),
+                   'total_distance_mi':feet_to_miles * df['delta_dist_ft'].sum(), 
+                   'total_ascent_ft':df['elapsed_ascent'].max(),
+                   'total_descent_ft':df['elapsed_descent'].max(),
+                   'avg_heart_rate':df['heart_rate_bpm'].mean(),
                    'avg_power':df['inst_power'].mean(),
-                   'avg_cadence':df['filt_cadence'].mean(),
-                   'cadence_duty_cycle':sum((df['is_cruising']==True)&(df['filt_cadence']>20)) / sum(df['is_cruising']==True)
+                   'avg_cadence':df['filt_cadence_rpm'].mean(),
+                   'avg_ambient_temp_F':df['ambient_temp_C'].apply(C_to_F).mean()
+                   #'cadence_duty_cycle':sum((df['is_cruising']==True)&(df['filt_cadence']>20)) / sum(df['is_cruising']==True)
                    }
         return summary
 
-    def _save_new_ride_summary(self, df_summary_new:pd.DataFrame) -> None
+    def _save_new_ride_summary(self, df_summary_new:pd.DataFrame) -> None:
         # Merge new summary data into old summary data using ride_id as the key
         df_total_summary = self.df_summary.merge(df_summary_new, how='left',on='ride_id')
         df_total_summary.to_csv(self.config['summary_output_directory'] / f'ride_summary.csv', index=False)
@@ -124,6 +134,7 @@ class GpxTransformer:
 class TimeUpsampler:
     def process(self, df:pd.DataFrame, time_gap_threshold:int=15, upsample:bool=False) -> pd.DataFrame:
         df = df.copy()
+        df['is_original_row'] = True
         df = self.enrich_time_data(df)
         df['elapsed_time'] = df['delta_time'].cumsum()
         df = self.label_continuous_segments(df, time_gap_threshold)
@@ -134,6 +145,8 @@ class TimeUpsampler:
 
     def upsample(self, df:pd.DataFrame) -> pd.DataFrame:
         df_upsampled = self.normalize_sampling_rate(df)
+        df_upsampled['ride_id'] = df.loc[0,'ride_id'] # copy the ride_id into all interpolated rows
+        df['is_original_row'] = df['is_original_row'].fillna(False) # these are interpolated rows
         return df_upsampled
 
     @staticmethod
@@ -189,6 +202,10 @@ class TimeUpsampler:
         kwargs = dict(method=method, limit_direction=limit_direction)
         if method=='spline':
             kwargs['order']=2
+        # Get rid of any duplicate rows to prevent reindexing errors
+        df = df.drop_duplicates(subset=[time_column])
+
+        # Resample the rows to a 1 Hz sampling rate (1 second sampling period)
         df = df.set_index(time_column).copy()
         df = df.resample('s').interpolate(**kwargs).reset_index()
         return df

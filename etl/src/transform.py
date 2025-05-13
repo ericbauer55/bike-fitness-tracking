@@ -5,7 +5,6 @@ from functools import reduce
 from haversine import haversine
 from typing import Optional
 from pathlib import Path
-from .utils import read_ride_csv
 from .clean import PrivacyZoner, NoiseFilter
 
 class GpxTransformer:
@@ -62,7 +61,7 @@ class GpxTransformer:
     def _process_transforms(self, df:pd.DataFrame, ride_id:str) -> pd.DataFrame:
         df = self.Timer.process(df, time_gap_threshold=self.config['time_gap_threshold'], upsample=True)
         df = self.Enricher.process(df)
-        columns_to_filter = ['ambient_temp_C','heart_rate_bpm','cadence_rpm','speed', 'grade', 'grade_saturated']
+        columns_to_filter = ['ambient_temp_C','heart_rate_bpm','cadence_rpm','speed','speed_saturated', 'grade', 'grade_saturated']
         df = self.NoiseFilter.filter_columns(df, columns_to_filter)
         # Get the total weight for this ride
         total_weight = self.df_summary.loc[self.df_summary['ride_id']==ride_id, [col for col in self.df_summary.columns if 'weight' in col]].values.sum()
@@ -129,10 +128,10 @@ class GpxTransformer:
         # Create a set of rolling windows to calculate a MAX over avg(inst_powers[within_window])
         rolling_windows = [4, 5, 10, 20, 30, 60, # seconds
                             2*60, 3*60, 4*60, 5*60, 6*60, 10*60, 20*60, 30*60, 40*60, # minutes
-                            60*60, 2*60*60, 3*60*60, 4*60*60] # hours
+                            60*60] # hours
         rwindow_labels = ['4s', '5s', '10s', '20s', '30s', '1m', # seconds
                             '2m', '3m', '4m', '5m', '6m', '10m', '20m', '30m', '40m', # minutes
-                            '1h', '2h', '3h', '4h'] # hours
+                            '1h'] # hours
         label_map = {seconds:label for seconds,label in zip(rolling_windows,rwindow_labels)}
 
         # Initialize a list to store the peak powers per window
@@ -311,11 +310,12 @@ class BasicEnricher:
     # Speed Enrichments
     ##############################################################################################
     @staticmethod
-    def compute_speed(df):
+    def compute_speed(df, saturation_speed:float=45.0):
         df = df.copy()
         feet_to_miles = 1.0 / 5280.0
         miles_per_second_2_MPH = 3600.0 / 1.0 # conversion factor
         df['speed'] = miles_per_second_2_MPH * (feet_to_miles*df['delta_dist_ft']) / df['delta_time']
+        df['speed_saturated'] = df['speed'].apply(lambda x:min(saturation_speed, x))
         return df
 
     @staticmethod
@@ -393,7 +393,7 @@ class BasicEnricher:
         return df
 
 class PowerEstimator:
-    def __init__(self, power_params:dict, speed_col:str='filt_speed', grade_col:str='filt_grade_saturated')->None:
+    def __init__(self, power_params:dict, speed_col:str='filt_speed_saturated', grade_col:str='filt_grade_saturated')->None:
         self.power_params = power_params
         self.speed_col = speed_col
         self.grade_col = grade_col

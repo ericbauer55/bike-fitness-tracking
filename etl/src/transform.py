@@ -120,7 +120,39 @@ class GpxTransformer:
                    'avg_ambient_temp_F':df['ambient_temp_C'].apply(C_to_F).mean()
                    #'cadence_duty_cycle':sum((df['is_cruising']==True)&(df['filt_cadence']>20)) / sum(df['is_cruising']==True)
                    }
+        power_summary = self._calculate_power_curve(df)
+        summary |= power_summary
+        
         return summary
+    
+    def _calculate_power_curve(self, df: pd.DataFrame):
+        # Create a set of rolling windows to calculate a MAX over avg(inst_powers[within_window])
+        rolling_windows = [4, 5, 10, 20, 30, 60, # seconds
+                            2*60, 3*60, 4*60, 5*60, 6*60, 10*60, 20*60, 30*60, 40*60, # minutes
+                            60*60, 2*60*60, 3*60*60, 4*60*60] # hours
+        rwindow_labels = ['4s', '5s', '10s', '20s', '30s', '1m', # seconds
+                            '2m', '3m', '4m', '5m', '6m', '10m', '20m', '30m', '40m', # minutes
+                            '1h', '2h', '3h', '4h'] # hours
+        label_map = {seconds:label for seconds,label in zip(rolling_windows,rwindow_labels)}
+
+        # Initialize a list to store the peak powers per window
+        window_peak_powers = []
+
+        for rwindow in rolling_windows:
+            # We should not calculate the peak power for a window that is longer than this value since it is ill defined
+            rolling_avg_inst_power = df[['inst_power']].rolling(rwindow, min_periods=rwindow).mean().dropna()
+            if rolling_avg_inst_power.shape[0]==0: # all values were np.nan, hence the window is too large for the ride data
+                peak_power = np.nan
+            else:
+                peak_power = max(rolling_avg_inst_power.values)[0]
+            window_peak_powers.append({'time_window':label_map[rwindow], 'window_length_seconds':rwindow, 'peak_avg_power':peak_power})
+        
+        # Create and output dictionary that summarizes the best power efforts by duration for this ride
+        df_pwr = pd.DataFrame(window_peak_powers)
+        output_summary = dict()
+        for _, row in df_pwr[['time_window','peak_avg_power']].iterrows():
+            output_summary[f'best_power_{row["time_window"]}'] = row['peak_avg_power']
+        return output_summary
 
     def _save_new_ride_summary(self, df_summary_new:pd.DataFrame) -> None:
         # Merge new summary data into old summary data using ride_id as the key

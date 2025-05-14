@@ -6,8 +6,8 @@ extraction:
   summary_output_directory: '../data/0_extracted/summary' # Output summary .csv file lives here
 
 transformation:
-  enable: True                                           # Should this part of the pipeline run?
-  clear_outputs: True                                    # Should the @output_directory be cleared to start a fresh run?
+  enable: False                                           # Should this part of the pipeline run?
+  clear_outputs: True                                     # Should the @output_directory be cleared to start a fresh run?
   input_directory: '../data/0_extracted/processed'        # Input .csv files live here
   output_directory: '../data/1_transformed'               # Output .csv files live here
   summary_input_directory: '../data/0_extracted/summary'  # Input summary .csv file lives here (as created by the Exteract flow)
@@ -22,6 +22,15 @@ transformation:
     rho_air: 1.2 # kg/m^3 air density
     eta_dt: 0.96 # efficiency of drive train
     gravity: 9.8 # m/s^2
+
+load:
+  enable: True
+  clear_outputs: True
+  input_directory: '../data/1_transformed/'                 # Input .csv files live here
+  output_directory: '../data/2_loaded/'                     # Output .csv files live here
+  summary_input_directory: '../data/1_transformed/summary'  # Input summary .csv file lives here (as created by the Exteract flow)
+  summary_output_directory: '../data/2_loaded/summary'      # Output summary .csv file lives here
+  min_ride_time_duration_seconds: 300                       # This is the minimum duration of a ride in order to count
 
 
           

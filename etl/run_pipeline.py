@@ -1,6 +1,7 @@
 from src.utils import verify_schema
 from src.extract import GpxExtractor
 from src.transform import GpxTransformer
+from src.load import CleanRideLoader
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -66,14 +67,36 @@ if __name__ == '__main__':
     if config_transform['enable'] == True:
         print('Transforming CSV Ride Files...')
         print(msep)
-        if config_extract['clear_outputs']:
-            output_dir = Path(config_extract['output_directory'])
+        if config_transform['clear_outputs']:
+            output_dir = Path(config_transform['output_directory'])
             print(f'Clearing "{output_dir}" for a fresh run.')
             print(msep)
             subprocess.run(f'rm -rf {output_dir}/*', shell=True)
+            subprocess.run(f'mkdir {output_dir}/summary', shell=True)
 
         transfomer = GpxTransformer(config=config_transform, privacy_config=secrets_yaml)
         transfomer.run()
     else:
         print('Skipping Transformation Step...')
+
+
+    # #####################################################################################################
+    # # 3. Run the Load Step for Clean Ride Data
+    # #####################################################################################################
+    config_load = config_yaml['load']
+    print(Msep)
+    if config_load['enable'] == True:
+        print('Loading Clean CSV Ride Files...')
+        print(msep)
+        if config_load['clear_outputs']:
+            output_dir = Path(config_load['output_directory'])
+            print(f'Clearing "{output_dir}" for a fresh run.')
+            print(msep)
+            subprocess.run(f'rm -rf {output_dir}/*', shell=True)
+            subprocess.run(f'mkdir {output_dir}/summary', shell=True)
+
+        ride_loader = CleanRideLoader(config=config_load)
+        ride_loader.run()
+    else:
+        print('Skipping Load Step...')
 

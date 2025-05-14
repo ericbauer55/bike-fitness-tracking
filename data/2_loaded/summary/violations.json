@@ -1,0 +1,62 @@
+{
+    "best_power_4s": [
+        "0x5f26bb29",
+        "0x5f2748d7",
+        "0x5f3d98a2",
+        "0x5f3ee6b1",
+        "0x5f42a71c",
+        "0x5f708bfe"
+    ],
+    "best_power_5s": [
+        "0x5f26bb29",
+        "0x5f2748d7",
+        "0x5f2c2c6f",
+        "0x5f3d98a2",
+        "0x5f3ee6b1",
+        "0x5f42a71c",
+        "0x5f45224b",
+        "0x5f63b408",
+        "0x5f708bfe",
+        "0x61786004"
+    ],
+    "best_power_10s": [
+        "0x5f26bb29",
+        "0x5f2748d7",
+        "0x5f3d98a2",
+        "0x5f3ee6b1",
+        "0x5f42a71c",
+        "0x5f63b408",
+        "0x5f708bfe"
+    ],
+    "best_power_20s": [
+        "0x5f26bb29",
+        "0x5f2748d7",
+        "0x5f3d98a2",
+        "0x5f42a71c",
+        "0x5f708bfe"
+    ],
+    "best_power_30s": [
+        "0x5f26bb29",
+        "0x5f2748d7",
+        "0x5f3d98a2",
+        "0x5f42a71c",
+        "0x5f708bfe"
+    ],
+    "best_power_1m": [
+        "0x5f26bb29",
+        "0x5f708bfe"
+    ],
+    "best_power_2m": [
+        "0x5f26bb29",
+        "0x5f708bfe"
+    ],
+    "best_power_3m": [],
+    "best_power_4m": [],
+    "best_power_5m": [],
+    "best_power_6m": [],
+    "best_power_10m": [],
+    "best_power_20m": [],
+    "best_power_30m": [],
+    "best_power_40m": [],
+    "best_power_1h": []
+}

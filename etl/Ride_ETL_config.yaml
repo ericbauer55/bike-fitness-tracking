@@ -30,6 +30,7 @@ load:
   output_directory: '../data/2_loaded/'                     # Output .csv files live here
   summary_input_directory: '../data/1_transformed/summary'  # Input summary .csv file lives here (as created by the Exteract flow)
   summary_output_directory: '../data/2_loaded/summary'      # Output summary .csv file lives here
+  min_ride_time_duration_seconds: 300                       # This is the minimum duration of a ride in order to count
 
 
           

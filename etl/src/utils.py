@@ -88,7 +88,15 @@ def verify_schema(config_type:str, data:dict) -> bool:
                                                              'eta_dt': And(float, Use(float), lambda x: x>0 and x<1.0),  
                                                              'gravity': And(float, Use(float), lambda x: x in [9.8, 32.15224]) # m/s^2, ft/s^2
                                                             }
-                                        }
+                                        },
+                        And('load'):{'enable': And(bool),
+                                    'clear_outputs': And(bool),
+                                    'input_directory': And(str, Use(lambda x:Path(x).resolve())),
+                                    'output_directory': And(str, Use(lambda x:Path(x).resolve())),
+                                    'summary_input_directory': And(str, Use(lambda x:Path(x).resolve())),
+                                    'summary_output_directory': And(str, Use(lambda x:Path(x).resolve())),
+                                    'min_ride_time_duration_seconds': And(int, lambda x: x>0 and x<24*60*60)
+                                    },
                         }
 
     elif config_type=='secrets':

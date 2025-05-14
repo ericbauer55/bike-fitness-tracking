@@ -4,6 +4,7 @@ import numpy as np
 from tqdm import tqdm
 import great_expectations as gx
 import great_expectations.expectations as gxe
+from functools import reduce
 # ref: https://docs.greatexpectations.io/docs/core/introduction/
 
 
@@ -69,4 +70,15 @@ class CleanRideLoader:
             violations[col] = validation_results['result']['unexpected_index_list']
 
         ## 2b. Create and Validate the minimum ride time duration expectation
-        
+        duration_col = 'total_ride_time_sec'
+        # The minimum ride should be at least 5 minutes and less than 24 hours
+        expectations[duration_col] = gxe.ExpectColumnValuesToBeBetween(column=col, max_value=60*60*24, 
+                                                                       min_value=self.config['min_ride_time_duration_seconds'])
+        validation_results = batch.validate(expectations[duration_col] , **{"result_format": "COMPLETE"})
+        violations[duration_col] = validation_results['result']['unexpected_index_list']
+
+        ## Get the UNION'd set of violation indices
+        violations_indices = list(set(reduce(lambda x,y: x+y,violations.values(), [])))
+        violations_indices.sort()
+
+        return violations_indices

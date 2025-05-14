@@ -72,6 +72,7 @@ if __name__ == '__main__':
             print(f'Clearing "{output_dir}" for a fresh run.')
             print(msep)
             subprocess.run(f'rm -rf {output_dir}/*', shell=True)
+            subprocess.run(f'mkdir {output_dir}/summary', shell=True)
 
         transfomer = GpxTransformer(config=config_transform, privacy_config=secrets_yaml)
         transfomer.run()
@@ -92,6 +93,7 @@ if __name__ == '__main__':
             print(f'Clearing "{output_dir}" for a fresh run.')
             print(msep)
             subprocess.run(f'rm -rf {output_dir}/*', shell=True)
+            subprocess.run(f'mkdir {output_dir}/summary', shell=True)
 
         ride_loader = CleanRideLoader(config=config_load)
         ride_loader.run()

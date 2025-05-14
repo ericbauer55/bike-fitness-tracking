@@ -128,10 +128,10 @@ class GpxTransformer:
         # Create a set of rolling windows to calculate a MAX over avg(inst_powers[within_window])
         rolling_windows = [4, 5, 10, 20, 30, 60, # seconds
                             2*60, 3*60, 4*60, 5*60, 6*60, 10*60, 20*60, 30*60, 40*60, # minutes
-                            60*60] # hours
+                            60*60, 2*60*60] # hours
         rwindow_labels = ['4s', '5s', '10s', '20s', '30s', '1m', # seconds
                             '2m', '3m', '4m', '5m', '6m', '10m', '20m', '30m', '40m', # minutes
-                            '1h'] # hours
+                            '1h', '2h'] # hours
         label_map = {seconds:label for seconds,label in zip(rolling_windows,rwindow_labels)}
 
         # Initialize a list to store the peak powers per window

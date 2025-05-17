@@ -8,6 +8,8 @@ __pycache__/
 
 # Ignore the raw data folder to preserve privacy
 data/0_extracted/*
+data/5_models/*
+
 
 # Also ignore sensitive config information
 etl/sensitive_config/*
